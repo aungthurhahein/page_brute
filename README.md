@@ -127,5 +127,31 @@ root@system:~/Desktop/page/page_brute/PAGE_BRUTE-2013-10-27-01:20:28-RESULTS/web
 00000e0: 2020 3c74 6420 7374 796c 653d 2270 6164    <td style="pad
 00000f0: 6469 6e67 2d62 6f74 746f 6d3a 202e 3165  ding-bottom: .1e
 
+```
 
+### Addtional output files
+2 addtional output files are written to analyze matched page blocks and page IDs.
+
+1. intputfilename_pagelist: it contains all the list of pages bock IDs that match with Yara rule sets.
+2. intputfilename_pageblocks: it contains all page blocks that match with Yara rule sets.
+
+### Further Analysis
+
+As for the scenario of scanning a pagefile with 3 different yara rule sets, it is possible to extract the page IDs that matches with multiple Yara rules. The purpose is to narrow down false positives and the investigators can focus on page blocks that contains information.
+
+For e.g, By looking at the output, it can be seen that page block 114126 contains http header with URL address.
+
+```
+pageblock   Yara Rules
+114126  http_request_header;http_response_header;url_address
+```
+
+A bash script, **further_analysis.sh**, is implemented to achieve it as the following processing;
+
+1. From muliple intputfilename_pagelist output, all page IDs with its corresponding Yara rules are combined.
+2. Unique page IDs and repeated Page IDs are written to allpage.uniq and allpage.repeats respectively.
+3. python script,rules_IDrepeats_map.py, will map page IDs with its corresponding rules in the following format:
+
+```
+    page block ID   rule-1;rule-2...rule-n
 ```

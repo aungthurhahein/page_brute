@@ -16,6 +16,6 @@ sort -t $'\t' -k2 -n allpage.lst > $outfile$sort
 cat allpage.lst.sort | awk -F '\t' '{print $2}' | sort | uniq -d > allpage.repeats
 cat allpage.lst.sort | awk -F '\t' '{print $2}' | sort | uniq -c > allpage.uniq
 
-# map repeated pageid togher by its rule to analyze further analysis
-
-
+# extract repeated pageid togher by its rule name to cross reference analysis of the page blocks
+python rules_IDrepeats_map.py allpage.repeats allpage.lst.sort > allpage.repeats.map
+python rules_IDrepeats_map.py allpage.uniq allpage.lst.sort > allpage.uniq.map
