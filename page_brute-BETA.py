@@ -22,17 +22,17 @@ except:
 # check whether the block is null/zero out or not
 # if so, skip.
 def is_block_null(block):
-    RAW_BLOCK = binascii.hexlify(block)
-    NULL_REF = binascii.hexlify(NULL_REFERENCE)
+    raw_block = binascii.hexlify(block)
+    null_ref = binascii.hexlify(NULL_REFERENCE)
 
-    if RAW_BLOCK == NULL_REF:
+    if raw_block == null_ref:
         return True
     else:
         return False
 
 # compile yara rules
 def build_ruleset():
-    if RULETYPE == "FILE":
+    if ruletype == "FILE":
         try:
             rules = yara.compile(str(RULES))
             print "..... Ruleset Compilation Successful."
@@ -42,9 +42,9 @@ def build_ruleset():
             print "Exiting."
             sys.exit()
 
-    elif RULETYPE == "FOLDER":
+    elif ruletype == "FOLDER":
         RULEDATA=""
-        #::Get list of files ending in .yara
+        # Get list of files ending in .yara
 
         RULE_COUNT = len(glob.glob1(RULES,"*.yar"))
         if RULE_COUNT != 0:
@@ -61,19 +61,20 @@ def build_ruleset():
                 except:
                     print "..... SKIPPING: Could not compile rule: %s " % yara_file
             try:
-                rules=yara.compile(source=RULEDATA)
+                rules = yara.compile(source=RULEDATA)
                 print "..... SUCCESS! Compiled noted yara rulesets.\n"
                 return rules
             except:
-                print "[!] - Some catastropic error occurred in the compilation of signatureswithin the directory. Exiting."
+                print "[!] - Some catastropic error occurred in the " \
+                      "compilation of signatureswithin the directory. Exiting."
                 sys.exit()
         else:
             print "No files ending in .yar within: %s " % RULES
             print "Exiting."
             sys.exit()
 
-    elif RULETYPE == "DEFAULT":
-        rules=yara.compile(str(RULES))
+    elif ruletype == "DEFAULT":
+        rules = yara.compile(str(RULES))
         print "[+] - Ruleset Compilation Successful."
         return rules
 
@@ -86,9 +87,9 @@ def print_procedures():
     print "[+] - PAGE_BRUTE running with the following options:"
     print "\t[-] - FILE: %s" % FILE
     print "\t[-] - PAGE_SIZE: %s" % PAGE_SIZE
-    print "\t[-] - RULES TYPE: %s" % RULETYPE
+    print "\t[-] - RULES TYPE: %s" % ruletype
     print "\t[-] - RULE LOCATION: %s" % RULES
-    print "\t[-] - INVERSION SCAN: %s" % INVERT
+    print "\t[-] - INVERSION SCAN: %s" % invert
     print "\t[-] - WORKING DIR: %s" % WORKING_DIR
     print "\t=================\n"
 
@@ -99,8 +100,8 @@ def main():
     global PAGE_SIZE
     global RULES
     global SCANNAME
-    global INVERT
-    global RULETYPE
+    global invert
+    global ruletype
     global NULL_REFERENCE
 
     # parse input arguments
@@ -151,9 +152,9 @@ def main():
 
     # Check if --invert-match provided
     if args.invert:
-        INVERT = True
+        invert = True
     else:
-        INVERT = False
+        invert = False
 
     # Check if --rule-file provdided - if not, use default ruleset
     if args.rules:
@@ -161,11 +162,11 @@ def main():
         try:
             # Is File?
             if os.path.isfile(RULES):
-                RULETYPE = "FILE"
+                ruletype = "FILE"
                 print "[+] - YARA rule of File type provided for compilation: %s" % RULES
             elif os.path.isdir(RULES):
                 print "[+] - YARA rule of Folder type provided for compilation: %s" % RULES
-                RULETYPE="FOLDER"
+                ruletype="FOLDER"
         except:
             print "[!] - Possible catastrophic error with the provided rule file...exiting."
             sys.exit()
@@ -173,7 +174,7 @@ def main():
         try:
             with open("default_signatures.yar"):
                 RULES = "default_signatures.yar"
-                RULETYPE = "DEFAULT"
+                ruletype = "DEFAULT"
         except:
             print "[!] - Could not locate \"default_signature.yar\". Find it or provide custom signatures via --rules. Exiting."
             sys.exit()
@@ -202,10 +203,10 @@ def main():
             if not is_block_null(raw_page):
                 # Determine if block is null
                 for matches in authoritative_rules.match(data=raw_page):
-                    if INVERT == True:
+                    if invert == True:
                         matched = True
                     else:
-                        CHUNK_OUTPUT_DIR = os.path.join(WORKING_DIR,matches.rule)
+                        chunk_output_dir = os.path.join(WORKING_DIR,matches.rule)
                         print "        [!] FLAGGED BLOCK " + str(page_id) + ": " + matches.rule
 
                         # save page id with matched rules to dictionary page_list
@@ -214,29 +215,29 @@ def main():
                         else:
                             page_list[matches.rule] += ";"+str(page_id)
                         page_block[page_id] = raw_page
-                        if not os.path.exists(CHUNK_OUTPUT_DIR):
-                            os.makedirs(CHUNK_OUTPUT_DIR)
+                        if not os.path.exists(chunk_output_dir):
+                            os.makedirs(chunk_output_dir)
 
                         # Save chunk to file
-                        CHUNK_OUTPUT_FWD = os.path.join(CHUNK_OUTPUT_DIR,str(page_id) + ".block")
-                        page_export = open(CHUNK_OUTPUT_FWD,'w+')
+                        chunk_output_fwd = os.path.join(chunk_output_dir,str(page_id) + ".block")
+                        page_export = open(chunk_output_fwd,'w+')
                         page_export.write(raw_page)
                         page_export.close()
 
-                if INVERT == True:
+                if invert == True:
                     if matched == False:
-                        CHUNK_OUTPUT_DIR = os.path.join(WORKING_DIR,"INVERTED-MATCH")
+                        chunk_output_dir = os.path.join(WORKING_DIR,"INVERTED-MATCH")
                         print "        [!] BLOCK DOES NOT MATCH ANY KNOWN SIGNATURE " + str(page_id)
-                        if not os.path.exists(CHUNK_OUTPUT_DIR):
-                            os.makedirs(CHUNK_OUTPUT_DIR)
+                        if not os.path.exists(chunk_output_dir):
+                            os.makedirs(chunk_output_dir)
 
-                        CHUNK_OUTPUT_FWD = os.path.join(CHUNK_OUTPUT_DIR,str(page_id) + ".block")
-                        page_export = open(CHUNK_OUTPUT_FWD,'w+')
+                        chunk_output_fwd = os.path.join(chunk_output_dir,str(page_id) + ".block")
+                        page_export = open(chunk_output_fwd,'w+')
                         page_export.write(raw_page)
                         page_export.close()
 
             # Increment Counter for offset increment
-            page_id=page_id+1
+            page_id = page_id+1
 
     # write to a file as rules and pageid for further analysis
     o = open(SCANNAME+"_pagelist", 'w')
@@ -254,7 +255,7 @@ def main():
         hitrule = ""
         if str(k2) in page_list2:
             hitrule = scan_name[page_list2.index(str(k2))]
-        o2.write(">"+hitrule+"_"+str(k2)+'\n')
+        o2.write(">"+hitrule+"-"+str(k2)+'\n')
         o2.write(str(v2)+'\n')
 
 
